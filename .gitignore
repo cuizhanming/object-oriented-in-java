@@ -1,2 +1,31 @@
 # Project exclude paths
 /out/
+.idea/
+.gradle/
+
+# Maven build output
+/target/
+
+# Eclipse IDE files
+.classpath
+.project
+.settings/
+
+# VS Code settings
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IntelliJ IDEA
+*.iml
+
+# Build tools
+/build/
+
+# Test reports
+/test-output/
