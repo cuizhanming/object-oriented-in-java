@@ -1,0 +1,295 @@
+@startuml Structural_Design_Patterns
+!theme toy
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+title **Structural Design Patterns (结构型模式)**\n//All 7 GoF Structural Patterns//
+
+package "Adapter Pattern\n(适配器模式)" as adapter #LightBlue {
+    interface MediaPlayer {
+        +play(audioType: String, fileName: String): void
+    }
+
+    interface AdvancedMediaPlayer {
+        +playVlc(fileName: String): void
+        +playMp4(fileName: String): void
+    }
+
+    class VlcPlayer implements AdvancedMediaPlayer
+    class Mp4Player implements AdvancedMediaPlayer
+
+    class MediaAdapter implements MediaPlayer {
+        -advancedMusicPlayer: AdvancedMediaPlayer
+        --
+        +MediaAdapter(audioType: String)
+        +play(audioType: String, fileName: String): void
+    }
+
+    class AudioPlayer implements MediaPlayer {
+        +play(audioType: String, fileName: String): void
+    }
+
+    MediaAdapter --> AdvancedMediaPlayer : adapts
+    AudioPlayer --> MediaAdapter : uses
+
+    note bottom of MediaAdapter : Converts incompatible\ninterfaces to work together
+}
+
+package "Bridge Pattern\n(桥接模式)" as bridge #LightGreen {
+    interface DrawingAPI {
+        +drawCircle(x: double, y: double, radius: double): void
+        +drawRectangle(x: double, y: double, width: double, height: double): void
+    }
+
+    class DrawingAPI1 implements DrawingAPI
+    class DrawingAPI2 implements DrawingAPI
+
+    abstract class Shape {
+        #drawingAPI: DrawingAPI
+        --
+        #Shape(drawingAPI: DrawingAPI)
+        +{abstract} draw(): void
+        +{abstract} resizeByPercentage(percentage: double): void
+    }
+
+    class Circle extends Shape {
+        -x: double
+        -y: double
+        -radius: double
+        --
+        +Circle(x: double, y: double, radius: double, drawingAPI: DrawingAPI)
+        +draw(): void
+        +resizeByPercentage(percentage: double): void
+    }
+
+    class Rectangle extends Shape {
+        -x: double
+        -y: double
+        -width: double
+        -height: double
+        --
+        +Rectangle(x: double, y: double, width: double, height: double, drawingAPI: DrawingAPI)
+        +draw(): void
+        +resizeByPercentage(percentage: double): void
+    }
+
+    Shape --> DrawingAPI : implementation
+
+    note right of Shape : Abstraction separated\nfrom implementation
+}
+
+package "Composite Pattern\n(组合模式)" as composite #LightYellow {
+    interface FileSystemComponent {
+        +showDetails(): void
+        +getSize(): long
+        +getName(): String
+    }
+
+    class File implements FileSystemComponent {
+        -name: String
+        -size: long
+        --
+        +File(name: String, size: long)
+        +showDetails(): void
+        +getSize(): long
+        +getName(): String
+    }
+
+    class Directory implements FileSystemComponent {
+        -name: String
+        -components: List<FileSystemComponent>
+        --
+        +Directory(name: String)
+        +addComponent(component: FileSystemComponent): void
+        +removeComponent(component: FileSystemComponent): void
+        +showDetails(): void
+        +getSize(): long
+        +getName(): String
+    }
+
+    Directory o-- FileSystemComponent : contains
+
+    note bottom of Directory : Treats individual objects\nand compositions uniformly
+}
+
+package "Decorator Pattern\n(装饰器模式)" as decorator #LightCoral {
+    interface Coffee {
+        +getDescription(): String
+        +getCost(): double
+    }
+
+    class SimpleCoffee implements Coffee {
+        +getDescription(): String
+        +getCost(): double
+    }
+
+    abstract class CoffeeDecorator implements Coffee {
+        #coffee: Coffee
+        --
+        +CoffeeDecorator(coffee: Coffee)
+        +getDescription(): String
+        +getCost(): double
+    }
+
+    class MilkDecorator extends CoffeeDecorator
+    class SugarDecorator extends CoffeeDecorator
+    class VanillaDecorator extends CoffeeDecorator
+    class WhippedCreamDecorator extends CoffeeDecorator
+
+    CoffeeDecorator --> Coffee : wraps
+
+    note right of CoffeeDecorator : Adds behavior dynamically\nwithout altering structure
+}
+
+package "Facade Pattern\n(外观模式)" as facade #LightPink {
+    class CPU {
+        +freeze(): void
+        +jump(position: long): void
+        +execute(): void
+    }
+
+    class Memory {
+        +load(position: long, data: byte[]): void
+    }
+
+    class HardDrive {
+        +read(lba: long, size: int): byte[]
+    }
+
+    class GraphicsCard {
+        +initialize(): void
+        +renderFrame(): void
+    }
+
+    class SoundCard {
+        +initialize(): void
+        +playSound(): void
+    }
+
+    class ComputerFacade {
+        -cpu: CPU
+        -memory: Memory
+        -hardDrive: HardDrive
+        -graphics: GraphicsCard
+        -sound: SoundCard
+        --
+        +ComputerFacade()
+        +startComputer(): void
+        +shutdownComputer(): void
+        +runApplication(): void
+    }
+
+    ComputerFacade --> CPU
+    ComputerFacade --> Memory
+    ComputerFacade --> HardDrive
+    ComputerFacade --> GraphicsCard
+    ComputerFacade --> SoundCard
+
+    note bottom of ComputerFacade : Provides simplified interface\nto complex subsystem
+}
+
+package "Flyweight Pattern\n(享元模式)" as flyweight #LightSalmon {
+    interface CharacterFlyweight {
+        +display(row: int, column: int, font: String, size: int): void
+    }
+
+    class Character implements CharacterFlyweight {
+        -symbol: char
+        --
+        +Character(symbol: char)
+        +display(row: int, column: int, font: String, size: int): void
+    }
+
+    class CharacterFactory {
+        -{static} characters: Map<Character, CharacterFlyweight>
+        --
+        +{static} getCharacter(symbol: char): CharacterFlyweight
+        +{static} getCreatedFlyweightsCount(): int
+    }
+
+    class Document {
+        -characters: List<CharacterContext>
+        --
+        +addCharacter(symbol: char, row: int, column: int, font: String, size: int): void
+        +display(): void
+    }
+
+    class CharacterContext {
+        -character: CharacterFlyweight
+        -row: int
+        -column: int
+        -font: String
+        -size: int
+    }
+
+    CharacterFactory ..|> Character : <<creates>>
+    Document --> CharacterContext
+    CharacterContext --> CharacterFlyweight
+
+    note bottom of CharacterFactory : Manages flyweight instances\nto minimize memory usage
+}
+
+package "Proxy Pattern\n(代理模式)" as proxy #LightCyan {
+    interface Image {
+        +display(): void
+        +getInfo(): String
+    }
+
+    class RealImage implements Image {
+        -fileName: String
+        -fileSize: long
+        --
+        +RealImage(fileName: String)
+        -loadFromDisk(): void
+        +display(): void
+        +getInfo(): String
+    }
+
+    class ImageProxy implements Image {
+        -fileName: String
+        -realImage: RealImage
+        --
+        +ImageProxy(fileName: String)
+        +display(): void
+        +getInfo(): String
+    }
+
+    class CachingImageProxy implements Image {
+        -{static} cache: Map<String, RealImage>
+        -fileName: String
+        --
+        +CachingImageProxy(fileName: String)
+        +display(): void
+        +getInfo(): String
+    }
+
+    class ProtectedImageProxy implements Image {
+        -fileName: String
+        -userRole: String
+        -realImage: RealImage
+        --
+        +ProtectedImageProxy(fileName: String, userRole: String)
+        -hasAccess(): boolean
+        +display(): void
+        +getInfo(): String
+    }
+
+    ImageProxy ..|> RealImage : <<lazy creates>>
+    CachingImageProxy --> RealImage : caches
+    ProtectedImageProxy --> RealImage : protects access
+
+    note bottom of ImageProxy : Virtual Proxy:\nLazy initialization
+    note bottom of CachingImageProxy : Caching Proxy:\nImproves performance
+    note bottom of ProtectedImageProxy : Protection Proxy:\nControls access
+}
+
+' Layout hints for better organization
+adapter -[hidden]right-> bridge
+bridge -[hidden]right-> composite
+composite -[hidden]down-> decorator
+decorator -[hidden]right-> facade
+facade -[hidden]right-> flyweight
+flyweight -[hidden]down-> proxy
+
+@enduml

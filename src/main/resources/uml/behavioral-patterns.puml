@@ -1,0 +1,416 @@
+@startuml Behavioral_Design_Patterns
+!theme toy
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 200
+
+title **Behavioral Design Patterns (行为型模式)**\n//All 11 GoF Behavioral Patterns//
+
+package "Observer Pattern\n(观察者模式)" as observer #LightBlue {
+    interface Subject {
+        +registerObserver(observer: Observer): void
+        +removeObserver(observer: Observer): void
+        +notifyObservers(): void
+    }
+
+    interface Observer {
+        +update(temperature: float, humidity: float, pressure: float): void
+    }
+
+    class WeatherStation implements Subject {
+        -observers: List<Observer>
+        -temperature: float
+        -humidity: float
+        -pressure: float
+        --
+        +setMeasurements(temperature: float, humidity: float, pressure: float): void
+    }
+
+    class CurrentConditionsDisplay implements Observer
+    class StatisticsDisplay implements Observer
+    class ForecastDisplay implements Observer
+
+    WeatherStation --> Observer : notifies
+
+    note bottom of WeatherStation : Subject maintains list\nof observers to notify
+}
+
+package "Strategy Pattern\n(策略模式)" as strategy #LightGreen {
+    interface PaymentStrategy {
+        +pay(amount: double): void
+        +isValid(): boolean
+        +getPaymentType(): String
+    }
+
+    class CreditCardStrategy implements PaymentStrategy
+    class PayPalStrategy implements PaymentStrategy
+    class BankTransferStrategy implements PaymentStrategy
+
+    class ShoppingCart {
+        -items: List<Item>
+        -paymentStrategy: PaymentStrategy
+        --
+        +addItem(item: Item): void
+        +setPaymentStrategy(strategy: PaymentStrategy): void
+        +checkout(): void
+    }
+
+    class Item {
+        -name: String
+        -price: double
+    }
+
+    ShoppingCart --> PaymentStrategy : uses
+    ShoppingCart o-- Item : contains
+
+    note bottom of ShoppingCart : Context switches between\ndifferent algorithms
+}
+
+package "Command Pattern\n(命令模式)" as command #LightYellow {
+    interface Command {
+        +execute(): void
+        +undo(): void
+        +getDescription(): String
+    }
+
+    class Light {
+        -isOn: boolean
+        -location: String
+        --
+        +turnOn(): void
+        +turnOff(): void
+    }
+
+    class Fan {
+        -speed: int
+        -location: String
+        --
+        +setSpeed(speed: int): void
+    }
+
+    class LightOnCommand implements Command
+    class LightOffCommand implements Command
+    class FanSpeedCommand implements Command
+    class MacroCommand implements Command
+
+    class RemoteControl {
+        -onCommands: Command[]
+        -offCommands: Command[]
+        -commandHistory: Stack<Command>
+        --
+        +setCommand(slot: int, onCommand: Command, offCommand: Command): void
+        +onButtonPressed(slot: int): void
+        +undoButtonPressed(): void
+    }
+
+    LightOnCommand --> Light : controls
+    LightOffCommand --> Light : controls
+    FanSpeedCommand --> Fan : controls
+    RemoteControl --> Command : invokes
+
+    note bottom of RemoteControl : Invoker decoupled\nfrom receivers
+}
+
+package "State Pattern\n(状态模式)" as state #LightCoral {
+    interface VendingMachineState {
+        +insertCoin(): void
+        +selectProduct(): void
+        +dispenseProduct(): void
+        +refund(): void
+        +getStateName(): String
+    }
+
+    class VendingMachine {
+        -currentState: VendingMachineState
+        -idleState: VendingMachineState
+        -coinInsertedState: VendingMachineState
+        -productSelectedState: VendingMachineState
+        -soldState: VendingMachineState
+        -soldOutState: VendingMachineState
+        --
+        +setState(state: VendingMachineState): void
+    }
+
+    class IdleState implements VendingMachineState
+    class CoinInsertedState implements VendingMachineState
+    class ProductSelectedState implements VendingMachineState
+    class SoldState implements VendingMachineState
+    class SoldOutState implements VendingMachineState
+
+    VendingMachine --> VendingMachineState : current state
+    VendingMachine o-- IdleState
+    VendingMachine o-- CoinInsertedState
+    VendingMachine o-- ProductSelectedState
+    VendingMachine o-- SoldState
+    VendingMachine o-- SoldOutState
+
+    note bottom of VendingMachine : Context changes behavior\nbased on internal state
+}
+
+package "Template Method Pattern\n(模板方法模式)" as template #LightPink {
+    abstract class DataProcessor {
+        +processData(): void {final}
+        #{abstract} readData(): void
+        #{abstract} transformData(): void
+        #{abstract} saveData(): void
+        #isValidData(): boolean
+        #cleanup(): void
+        #handleInvalidData(): void
+    }
+
+    class CSVDataProcessor extends DataProcessor {
+        -csvData: String
+        --
+        #readData(): void
+        #transformData(): void
+        #saveData(): void
+        #isValidData(): boolean
+        #cleanup(): void
+    }
+
+    class XMLDataProcessor extends DataProcessor
+    class DatabaseDataProcessor extends DataProcessor
+
+    note bottom of DataProcessor : Defines algorithm skeleton,\nsubclasses implement steps
+}
+
+package "Chain of Responsibility\n(责任链模式)" as chain #LightSalmon {
+    abstract class SupportHandler {
+        #nextHandler: SupportHandler
+        --
+        +setNextHandler(nextHandler: SupportHandler): void
+        +{abstract} handleRequest(request: SupportRequest): void
+        #passToNext(request: SupportRequest): void
+    }
+
+    class SupportRequest {
+        +enum Priority
+        +enum Type
+        -description: String
+        -priority: Priority
+        -type: Type
+        -customerName: String
+    }
+
+    class Level1SupportHandler extends SupportHandler
+    class Level2SupportHandler extends SupportHandler
+    class ManagerHandler extends SupportHandler
+    class SeniorManagerHandler extends SupportHandler
+
+    class SupportSystem {
+        -firstHandler: SupportHandler
+        --
+        +processRequest(request: SupportRequest): void
+    }
+
+    SupportHandler --> SupportHandler : next
+    SupportHandler ..> SupportRequest : handles
+    SupportSystem --> SupportHandler : chain start
+
+    note bottom of SupportSystem : Passes request along\nchain until handled
+}
+
+package "Iterator Pattern\n(迭代器模式)" as iterator #LightCyan {
+    interface Iterator<T> {
+        +hasNext(): boolean
+        +next(): T
+        +remove(): void
+    }
+
+    interface Iterable<T> {
+        +createIterator(): Iterator<T>
+    }
+
+    class BookCollection implements Iterable {
+        -books: List<Book>
+        --
+        +addBook(book: Book): void
+        +createIterator(): Iterator<Book>
+    }
+
+    class BookIterator implements Iterator {
+        -position: int
+        --
+        +hasNext(): boolean
+        +next(): Book
+        +remove(): void
+    }
+
+    class Book {
+        -title: String
+        -author: String
+        -isbn: String
+        -year: int
+    }
+
+    BookCollection +-- BookIterator : inner class
+    BookCollection o-- Book : contains
+
+    note bottom of BookIterator : Provides sequential access\nwithout exposing structure
+}
+
+package "Mediator Pattern\n(中介者模式)" as mediator #Lavender {
+    interface ChatMediator {
+        +sendMessage(message: String, user: User): void
+        +addUser(user: User): void
+        +removeUser(user: User): void
+    }
+
+    abstract class User {
+        #mediator: ChatMediator
+        #name: String
+        --
+        +User(mediator: ChatMediator, name: String)
+        +{abstract} send(message: String): void
+        +{abstract} receive(message: String, from: String): void
+    }
+
+    class ChatRoom implements ChatMediator {
+        -users: Map<String, User>
+    }
+
+    class BasicUser extends User
+    class PremiumUser extends User
+
+    ChatRoom --> User : manages
+    User --> ChatMediator : communicates through
+
+    note bottom of ChatRoom : Centralizes communication\nbetween colleagues
+}
+
+package "Memento Pattern\n(备忘录模式)" as memento #LightGray {
+    class TextMemento {
+        -content: String
+        -cursorPosition: int
+        -timestamp: long
+        --
+        +getContent(): String
+        +getCursorPosition(): int
+    }
+
+    class TextEditor {
+        -content: String
+        -cursorPosition: int
+        --
+        +write(text: String): void
+        +save(): TextMemento
+        +restore(memento: TextMemento): void
+    }
+
+    class EditorHistory {
+        -history: Stack<TextMemento>
+        -maxHistory: int
+        --
+        +saveState(editor: TextEditor): void
+        +undo(editor: TextEditor): void
+    }
+
+    TextEditor ..|> TextMemento : <<creates>>
+    EditorHistory --> TextMemento : stores
+    EditorHistory --> TextEditor : restores
+
+    note bottom of EditorHistory : Caretaker manages\nmemento lifecycle
+}
+
+package "Visitor Pattern\n(访问者模式)" as visitor #MistyRose {
+    interface ShapeVisitor {
+        +visit(circle: Circle): void
+        +visit(rectangle: Rectangle): void
+        +visit(triangle: Triangle): void
+    }
+
+    interface Shape {
+        +accept(visitor: ShapeVisitor): void
+        +getName(): String
+    }
+
+    class Circle implements Shape {
+        -radius: double
+        -x: double
+        -y: double
+        --
+        +accept(visitor: ShapeVisitor): void
+        +getArea(): double
+    }
+
+    class Rectangle implements Shape
+    class Triangle implements Shape
+
+    class AreaCalculatorVisitor implements ShapeVisitor
+    class PerimeterCalculatorVisitor implements ShapeVisitor
+    class DrawingVisitor implements ShapeVisitor
+
+    class Drawing {
+        -shapes: List<Shape>
+        --
+        +addShape(shape: Shape): void
+        +accept(visitor: ShapeVisitor): void
+    }
+
+    Shape ..> ShapeVisitor : accepts
+    Drawing o-- Shape : contains
+
+    note bottom of ShapeVisitor : Defines operations on\nobject structure
+}
+
+package "Interpreter Pattern\n(解释器模式)" as interpreter #PaleGreen {
+    interface Expression {
+        +interpret(context: Context): int
+    }
+
+    class Context {
+        -variables: Map<String, Integer>
+        --
+        +setVariable(name: String, value: int): void
+        +getVariable(name: String): int
+    }
+
+    class NumberExpression implements Expression {
+        -number: int
+    }
+
+    class VariableExpression implements Expression {
+        -variable: String
+    }
+
+    class AddExpression implements Expression {
+        -left: Expression
+        -right: Expression
+    }
+
+    class SubtractExpression implements Expression
+    class MultiplyExpression implements Expression
+
+    class ExpressionParser {
+        +{static} parse(expression: String): Expression
+    }
+
+    class Calculator {
+        -context: Context
+        --
+        +evaluate(expression: String): int
+    }
+
+    AddExpression --> Expression : left/right
+    SubtractExpression --> Expression : left/right
+    MultiplyExpression --> Expression : left/right
+    ExpressionParser ..|> Expression : <<creates>>
+    Calculator --> Context : uses
+
+    note bottom of ExpressionParser : Builds expression tree\nfor language grammar
+}
+
+' Layout organization
+observer -[hidden]right-> strategy
+strategy -[hidden]right-> command
+command -[hidden]down-> state
+state -[hidden]right-> template
+template -[hidden]right-> chain
+chain -[hidden]down-> iterator
+iterator -[hidden]right-> mediator
+mediator -[hidden]right-> memento
+memento -[hidden]down-> visitor
+visitor -[hidden]right-> interpreter
+
+@enduml

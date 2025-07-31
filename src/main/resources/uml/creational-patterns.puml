@@ -1,0 +1,206 @@
+@startuml Creational_Design_Patterns
+!theme toy
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+title **Creational Design Patterns (创建型模式)**\n//All 5 GoF Creational Patterns//
+
+package "Singleton Pattern\n(单例模式)" as singleton #LightBlue {
+    enum DatabaseConnection {
+        INSTANCE
+        --
+        -connectionString: String
+        --
+        +connect(): void
+        +disconnect(): void
+    }
+
+    class Logger {
+        -{static} instance: Logger
+        -{static} lock: Object
+        --
+        -Logger()
+        +{static} getInstance(): Logger
+        +log(message: String): void
+    }
+
+    note right of Logger : Thread-safe Singleton\nwith lazy initialization
+}
+
+package "Factory Method Pattern\n(工厂方法模式)" as factory #LightGreen {
+    interface Vehicle {
+        +start(): void
+        +stop(): void
+        +getType(): String
+    }
+
+    class Car implements Vehicle
+    class Motorcycle implements Vehicle
+    class Truck implements Vehicle
+
+    abstract class VehicleFactory {
+        +{abstract} createVehicle(): Vehicle
+        +operateVehicle(): void
+    }
+
+    class CarFactory extends VehicleFactory
+    class MotorcycleFactory extends VehicleFactory
+    class TruckFactory extends VehicleFactory
+
+    VehicleFactory ..|> Vehicle : <<creates>>
+    CarFactory ..|> Car : <<creates>>
+    MotorcycleFactory ..|> Motorcycle : <<creates>>
+    TruckFactory ..|> Truck : <<creates>>
+
+    note bottom of VehicleFactory : Template method using\nfactory method pattern
+}
+
+package "Abstract Factory Pattern\n(抽象工厂模式)" as abstractfactory #LightYellow {
+    interface Button {
+        +render(): void
+        +onClick(): void
+    }
+
+    interface TextBox {
+        +render(): void
+        +setText(text: String): void
+    }
+
+    class WindowsButton implements Button
+    class WindowsTextBox implements TextBox
+    class MacButton implements Button
+    class MacTextBox implements TextBox
+
+    interface UIFactory {
+        +createButton(): Button
+        +createTextBox(): TextBox
+    }
+
+    class WindowsUIFactory implements UIFactory
+    class MacUIFactory implements UIFactory
+
+    class Application {
+        -button: Button
+        -textBox: TextBox
+        --
+        +Application(factory: UIFactory)
+        +render(): void
+    }
+
+    WindowsUIFactory ..|> WindowsButton : <<creates>>
+    WindowsUIFactory ..|> WindowsTextBox : <<creates>>
+    MacUIFactory ..|> MacButton : <<creates>>
+    MacUIFactory ..|> MacTextBox : <<creates>>
+    Application --> UIFactory : uses
+
+    note bottom of Application : Client code independent\nof concrete factories
+}
+
+package "Builder Pattern\n(建造者模式)" as builder #LightCoral {
+    class Computer {
+        -cpu: String
+        -ram: String
+        -storage: String
+        -gpu: String
+        -hasWifi: boolean
+        -hasBluetooth: boolean
+        -ports: List<String>
+        --
+        -Computer(builder: Builder)
+        +toString(): String
+    }
+
+    class Builder {
+        -cpu: String
+        -ram: String
+        -storage: String
+        -gpu: String
+        -hasWifi: boolean
+        -hasBluetooth: boolean
+        -ports: List<String>
+        --
+        +cpu(cpu: String): Builder
+        +ram(ram: String): Builder
+        +storage(storage: String): Builder
+        +gpu(gpu: String): Builder
+        +withWifi(): Builder
+        +withBluetooth(): Builder
+        +addPort(port: String): Builder
+        +build(): Computer
+    }
+
+    class ComputerDirector {
+        +buildGamingComputer(): Computer
+        +buildOfficeComputer(): Computer
+        +buildBudgetComputer(): Computer
+    }
+
+    Computer +-- Builder : <<inner class>>
+    ComputerDirector ..> Builder : uses
+    Builder ..|> Computer : <<creates>>
+
+    note right of Builder : Fluent interface with\nmethod chaining
+}
+
+package "Prototype Pattern\n(原型模式)" as prototype #LightPink {
+    interface Cloneable {
+        +clone(): Object
+    }
+
+    abstract class Shape implements Cloneable {
+        #color: String
+        #x: int
+        #y: int
+        --
+        +Shape()
+        +Shape(source: Shape)
+        +{abstract} clone(): Shape
+        +{abstract} draw(): void
+        +setColor(color: String): void
+        +setPosition(x: int, y: int): void
+    }
+
+    class Circle extends Shape {
+        -radius: int
+        --
+        +Circle()
+        +Circle(source: Circle)
+        +clone(): Shape
+        +draw(): void
+        +setRadius(radius: int): void
+    }
+
+    class Rectangle extends Shape {
+        -width: int
+        -height: int
+        --
+        +Rectangle()
+        +Rectangle(source: Rectangle)
+        +clone(): Shape
+        +draw(): void
+        +setSize(width: int, height: int): void
+    }
+
+    class ShapeRegistry {
+        -{static} prototypes: Map<String, Shape>
+        --
+        +registerPrototype(key: String, prototype: Shape): void
+        +createShape(key: String): Shape
+        +listPrototypes(): void
+    }
+
+    ShapeRegistry --> Shape : manages
+    ShapeRegistry ..|> Circle : <<creates>>
+    ShapeRegistry ..|> Rectangle : <<creates>>
+
+    note bottom of ShapeRegistry : Registry maintains\nprototype instances
+}
+
+' Layout hints
+singleton -[hidden]right-> factory
+factory -[hidden]right-> abstractfactory
+abstractfactory -[hidden]down-> builder
+builder -[hidden]right-> prototype
+
+@enduml
